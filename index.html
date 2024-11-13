@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            width: 80%;
+            margin: auto;
+        }
+        input, select {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .product-row {
+            margin-bottom: 15px;
+        }
+        .product-row input {
+            width: 100px;
+            display: inline-block;
+        }
+        .product-row select {
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .subtotal-row {
+            margin-top: 20px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h1>Order Form</h1>
+        <form id="orderForm">
+            <label for="orderId">Order ID</label>
+            <input type="text" id="orderId" name="orderId" readonly><br>
+            
+            <label for="customerName">Customer Name</label>
+            <input type="text" id="customerName" name="customerName" required><br>
+
+            <div id="productContainer">
+                <div class="product-row">
+                    <label>Product</label>
+                    <select class="productSelect" onchange="updateRate(this.parentElement)">
+                        <option value="">Select Product</option>
+                        <option value="Product A">Product A</option>
+                        <option value="Product B">Product B</option>
+                        <option value="Product C">Product C</option>
+                    </select>
+                    <label>Quantity</label>
+                    <input type="number" class="quantity" value="1" min="1" oninput="updateTotal(this.parentElement)">
+                    <label>Rate</label>
+                    <input type="number" class="rate" value="0" min="0" readonly>
+                    <label>Total</label>
+                    <input type="number" class="total" value="0" readonly>
+                </div>
+            </div>
+
+            <div class="subtotal-row">
+                <label>Subtotal</label>
+                <input type="number" id="subtotal" value="0" readonly>
+            </div>
+
+            <button type="button" class="add-product-btn" onclick="addProductRow()">Add Product</button><br><br>
+
+            <button type="submit">Submit Order</button>
+        </form>
+    </div>
+
+    <script>
+        // Predefined product rates
+        const productRates = {
+            "Product A": 50,
+            "Product B": 75,
+            "Product C": 100
+        };
+
+        // Generate a random Order ID
+        function generateRandomOrderId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let orderId = 'ORD-';
+            for (let i = 0; i < 8; i++) {
+                orderId += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return orderId;
+        }
+
+        // Set the initial Order ID on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const orderIdField = document.getElementById('orderId');
+            orderIdField.value = generateRandomOrderId();  // Set dynamic random Order ID
+        });
+
+        // Function to update the rate when a product is selected
+        function updateRate(row) {
+            const productSelect = row.querySelector('.productSelect');
+            const rateField = row.querySelector('.rate');
+            const selectedProduct = productSelect.value;
+
+            // Set the rate based on the selected product
+            if (selectedProduct) {
+                rateField.value = productRates[selectedProduct];
+            } else {
+                rateField.value = 0;
+            }
+
+            updateTotal(row); // Recalculate the total when the rate changes
+        }
+
+        // Function to update the total of a product row
+        function updateTotal(row) {
+            const quantity = row.querySelector('.quantity').value;
+            const rate = row.querySelector('.rate').value;
+            const total = row.querySelector('.total');
+            total.value = quantity * rate;
+
+            updateSubtotal();  // Recalculate subtotal whenever total changes
+        }
+
+        // Function to update the subtotal
+        function updateSubtotal() {
+            let subtotal = 0;
+            const rows = document.querySelectorAll('.product-row');
+            rows.forEach(row => {
+                const total = row.querySelector('.total').value;
+                subtotal += parseFloat(total) || 0;
+            });
+
+            document.getElementById('subtotal').value = subtotal.toFixed(2);  // Update subtotal field
+        }
+
+        // Function to add a new product row
+        function addProductRow() {
+            const container = document.getElementById('productContainer');
+            const newRow = document.createElement('div');
+            newRow.classList.add('product-row');
+            
+            newRow.innerHTML = `
+                <label>Product</label>
+                <select class="productSelect" onchange="updateRate(this.parentElement)">
+                    <option value="">Select Product</option>
+                    <option value="Product A">Product A</option>
+                    <option value="Product B">Product B</option>
+                    <option value="Product C">Product C</option>
+                </select>
+                <label>Quantity</label>
+                <input type="number" class="quantity" value="1" min="1" oninput="updateTotal(this.parentElement)">
+                <label>Rate</label>
+                <input type="number" class="rate" value="0" min="0" readonly>
+                <label>Total</label>
+                <input type="number" class="total" value="0" readonly>
+            `;
+
+            container.appendChild(newRow);
+        }
+
+        // Handle form submission
+        document.getElementById('orderForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const orderData = {
+                orderId: document.getElementById('orderId').value,
+                customerName: document.getElementById('customerName').value,
+                subtotal: document.getElementById('subtotal').value,
+                products: []
+            };
+
+            // Collect product data
+            const rows = document.querySelectorAll('.product-row');
+            rows.forEach(row => {
+                orderData.products.push({
+                    productName: row.querySelector('.productSelect').value,
+                    quantity: row.querySelector('.quantity').value,
+                    rate: row.querySelector('.rate').value,
+                    total: row.querySelector('.total').value
+                });
+            });
+
+            // Send the order data to Google Apps Script
+            fetch('https://script.google.com/macros/s/AKfycbxf-QicbwtxKLU3VRNVsMxcwXpyK6okCb5TMf-aepsp0FTtL3M_zq3VIrBrJpLGe_ilNg/exec', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)  // Send order data as JSON
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);  // Log the response from the server for debugging
+                if (data.result === 'success') {
+                    alert('Order submitted successfully');
+                    document.getElementById('orderForm').reset();
+                    document.getElementById('productContainer').innerHTML = ''; // Reset product rows
+                    updateSubtotal();  // Reset subtotal field
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);  // Log errors for debugging
+                alert('Error submitting order');
+            });
+        });
+    </script>
+</body>
+</html>
