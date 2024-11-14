@@ -1,224 +1,276 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .form-container {
-            width: 80%;
-            margin: auto;
-        }
-        input, select {
-            margin-bottom: 10px;
-            padding: 10px;
-            width: 100%;
-            max-width: 300px;
-        }
-        .product-row {
-            margin-bottom: 15px;
-        }
-        .product-row input {
-            width: 100px;
-            display: inline-block;
-        }
-        .product-row select {
-            width: 200px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .subtotal-row {
-            margin-top: 20px;
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="form-container">
-        <h1>Order Form</h1>
-        <form id="orderForm">
-            <label for="orderId">Order ID</label>
-            <input type="text" id="orderId" name="orderId" readonly><br>
-            
-            <label for="customerName">Customer Name</label>
-            <input type="text" id="customerName" name="customerName" required><br>
-
-            <div id="productContainer">
-                <div class="product-row">
-                    <label>Product</label>
-                    <select class="productSelect" onchange="updateRate(this.parentElement)">
-                        <option value="">Select Product</option>
-                        <option value="Product A">Product A</option>
-                        <option value="Product B">Product B</option>
-                        <option value="Product C">Product C</option>
-                    </select>
-                    <label>Quantity</label>
-                    <input type="number" class="quantity" value="1" min="1" oninput="updateTotal(this.parentElement)">
-                    <label>Rate</label>
-                    <input type="number" class="rate" value="0" min="0" readonly>
-                    <label>Total</label>
-                    <input type="number" class="total" value="0" readonly>
-                </div>
-            </div>
-
-            <div class="subtotal-row">
-                <label>Subtotal</label>
-                <input type="number" id="subtotal" value="0" readonly>
-            </div>
-
-            <button type="button" class="add-product-btn" onclick="addProductRow()">Add Product</button><br><br>
-
-            <button type="submit">Submit Order</button>
-        </form>
-    </div>
-
-    <script>
-        // Predefined product rates
-        const productRates = {
-            "Product A": 50,
-            "Product B": 75,
-            "Product C": 100
-        };
-
-        // Generate a random Order ID
-        function generateRandomOrderId() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let orderId = 'ORD-';
-            for (let i = 0; i < 8; i++) {
-                orderId += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return orderId;
-        }
-
-        // Set the initial Order ID on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const orderIdField = document.getElementById('orderId');
-            orderIdField.value = generateRandomOrderId();  // Set dynamic random Order ID
-        });
-
-        // Function to update the rate when a product is selected
-        function updateRate(row) {
-            const productSelect = row.querySelector('.productSelect');
-            const rateField = row.querySelector('.rate');
-            const selectedProduct = productSelect.value;
-
-            // Set the rate based on the selected product
-            if (selectedProduct) {
-                rateField.value = productRates[selectedProduct];
-            } else {
-                rateField.value = 0;
-            }
-
-            updateTotal(row); // Recalculate the total when the rate changes
-        }
-
-        // Function to update the total of a product row
-        function updateTotal(row) {
-            const quantity = row.querySelector('.quantity').value;
-            const rate = row.querySelector('.rate').value;
-            const total = row.querySelector('.total');
-            total.value = quantity * rate;
-
-            updateSubtotal();  // Recalculate subtotal whenever total changes
-        }
-
-        // Function to update the subtotal
-        function updateSubtotal() {
-            let subtotal = 0;
-            const rows = document.querySelectorAll('.product-row');
-            rows.forEach(row => {
-                const total = row.querySelector('.total').value;
-                subtotal += parseFloat(total) || 0;
-            });
-
-            document.getElementById('subtotal').value = subtotal.toFixed(2);  // Update subtotal field
-        }
-
-        // Function to add a new product row
-        function addProductRow() {
-            const container = document.getElementById('productContainer');
-            const newRow = document.createElement('div');
-            newRow.classList.add('product-row');
-            
-            newRow.innerHTML = `
-                <label>Product</label>
-                <select class="productSelect" onchange="updateRate(this.parentElement)">
-                    <option value="">Select Product</option>
-                    <option value="Product A">Product A</option>
-                    <option value="Product B">Product B</option>
-                    <option value="Product C">Product C</option>
-                </select>
-                <label>Quantity</label>
-                <input type="number" class="quantity" value="1" min="1" oninput="updateTotal(this.parentElement)">
-                <label>Rate</label>
-                <input type="number" class="rate" value="0" min="0" readonly>
-                <label>Total</label>
-                <input type="number" class="total" value="0" readonly>
-            `;
-
-            container.appendChild(newRow);
-        }
-
-        // Handle form submission
-        document.getElementById('orderForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const orderData = {
-                orderId: document.getElementById('orderId').value,
-                customerName: document.getElementById('customerName').value,
-                subtotal: document.getElementById('subtotal').value,
-                products: []
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Imagination Invoice Example</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            // Predefined product rates
+            const productRates = {
+                "Item 1": 1200,
+                "Item 2": 1300,
+                "Item 3": 1500,
+                "Item 4": 1800
             };
 
-            // Collect product data
-            const rows = document.querySelectorAll('.product-row');
-            rows.forEach(row => {
-                orderData.products.push({
-                    productName: row.querySelector('.productSelect').value,
-                    quantity: row.querySelector('.quantity').value,
-                    rate: row.querySelector('.rate').value,
-                    total: row.querySelector('.total').value
+            // Function to update the rate when a product is selected
+            function updateRate(select) {
+                var row = select.closest("tr");
+                var productName = select.value;
+                var rateInput = row.querySelector('input[name="rate"]');
+                
+                // Update the rate based on selected product
+                rateInput.value = productRates[productName] || 0;
+
+                // Recalculate the amount
+                calculateAmount(rateInput);
+            }
+
+            // Function to calculate the amount based on qty and rate
+            function calculateAmount(input) {
+                var row = input.closest("tr");
+                var qty = row.querySelector('input[name="qty"]').value;
+                var rate = row.querySelector('input[name="rate"]').value;
+                var amt = qty * rate;
+
+                row.querySelector('input[name="amt"]').value = amt;
+            }
+
+            // Function to add a new row to the table
+            function addRow() {
+                var table = document.getElementById("invoiceTable");
+                var rowCount = table.rows.length;  // Get the current number of rows
+                var row = table.insertRow(rowCount);  // Insert a new row at the end
+
+                // Insert cells into the row
+                row.innerHTML = `
+                    <th>${rowCount}</th>
+                    <td>
+                        <select name="item_nm" onchange="updateRate(this)">
+                            <option value="Item 1">Item 1</option>
+                            <option value="Item 2">Item 2</option>
+                            <option value="Item 3">Item 3</option>
+                            <option value="Item 4">Item 4</option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="qty" value="1" oninput="calculateAmount(this)"></td>
+                    <td><input type="number" name="rate" value="1200" oninput="calculateAmount(this)" readonly></td>
+                    <td><input type="number" name="amt" value="0" readonly></td>
+                `;
+                // Set the default rate for the new row (Item 1 rate)
+                var rateInput = row.querySelector('input[name="rate"]');
+                rateInput.value = productRates["Item 1"];
+                calculateAmount(rateInput);  // Recalculate the amount for the new row
+            }
+
+            // Form submission via AJAX
+            $(document).ready(function() {
+                $("form").submit(function(event) {
+                    event.preventDefault();  // Prevent default form submission
+
+                    var formData = $(this).serialize();  // Serialize form data
+
+                    // Send data to Google Apps Script using AJAX
+                    $.ajax({
+                        url: 'https://script.google.com/macros/s/AKfycbx_Bncz77b-780tWPq37r1BsPwrXIrmxZ9ovvKbX1-YpkYrl2WzPwOmXYqeW7CEOqolIw/exec',
+                        type: 'POST',
+                        data: formData,
+                        success: function(response) {
+                            alert('Invoice submitted successfully!');
+                            console.log(response);  // Handle success (optional)
+
+                            // Refresh the page after successful submission
+                            location.reload();  // Reload the page to reset the form
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Error submitting invoice!');
+                            console.error(error);  // Handle error (optional)
+                        }
+                    });
                 });
             });
+        </script>
+    </head>
+    <body>
 
-            // Send the order data to Google Apps Script
-            fetch('https://script.google.com/macros/s/AKfycbxZs0TM5Ol636mRfpEKGNhnil84sW02xVslf8EGPyqhp8MBJz302L6aNl_nfD2dHhE5dw/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)  // Send order data as JSON
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);  // Log the response from the server for debugging
-                if (data.result === 'success') {
-                    alert('Order submitted successfully');
-                    document.getElementById('orderForm').reset();
-                    document.getElementById('productContainer').innerHTML = ''; // Reset product rows
-                    updateSubtotal();  // Reset subtotal field
-                } else {
-                    alert('Error: ' + data.message);
+        <style>
+            /* Basic reset */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            /* Body styling */
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                padding: 20px;
+            }
+
+            /* Header styling */
+            h4 {
+                text-align: center;
+                font-size: 24px;
+                color: #333;
+                margin-bottom: 20px;
+            }
+
+            /* Form container styling */
+            form {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            /* Input styling */
+            input[type="text"],
+            input[type="date"],
+            input[type="number"],
+            select {
+                width: 100%;
+                padding: 8px;
+                margin: 5px 0 15px 0;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+            }
+
+            /* Table styling */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            table th, table td {
+                padding: 12px;
+                text-align: left;
+                border: 1px solid #ddd;
+            }
+
+            table th {
+                background-color: #f1f1f1;
+                font-weight: bold;
+                color: #333;
+            }
+
+            table td input,
+            table td select {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+            /* Button styling */
+            button[type="submit"], #addRowBtn {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                margin-top: 10px;
+                transition: background-color 0.3s;
+            }
+
+            button[type="submit"]:hover, #addRowBtn:hover {
+                background-color: #0056b3;
+            }
+
+            /* Responsive Design */
+            @media (max-width: 768px) {
+                form {
+                    padding: 15px;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);  // Log errors for debugging
-                alert('Error submitting order');
-            });
-        });
-    </script>
-</body>
+
+                input[type="text"],
+                input[type="date"],
+                input[type="number"],
+                select,
+                button[type="submit"],
+                #addRowBtn {
+                    font-size: 14px;
+                }
+
+                table th, table td {
+                    padding: 10px;
+                }
+            }
+
+        </style>
+
+        <h4>INVOICE</h4>
+        <form>
+
+            <label>Inv. No:</label>
+            <input type="text" name="inv_no" value="1001"></br>
+
+            <label>Inv. Date:</label>
+            <input type="date" name="inv_dt" value="2023-01-26"></br>
+
+            <label>Customer:</label>
+            <input type="text" name="cust_nm" value="Imagination"></br>
+
+            <label>Address:</label>
+            <input type="text" name="addr" value="Address Here"></br>
+
+            <label>City:</label>
+            <input type="text" name="city" value="City Here"></br>
+
+            <table id="invoiceTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Particular</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>1</th>
+                        <td>
+                            <select name="item_nm" onchange="updateRate(this)">
+                                <option value="Item 1">Item 1</option>
+                                <option value="Item 2">Item 2</option>
+                                <option value="Item 3">Item 3</option>
+                                <option value="Item 4">Item 4</option>
+                            </select>
+                        </td>
+                        <td><input type="number" name="qty" value="10" oninput="calculateAmount(this)"></td>
+                        <td><input type="number" name="rate" value="1200" oninput="calculateAmount(this)" readonly></td>
+                        <td><input type="number" name="amt" value="12000" readonly></td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>
+                            <select name="item_nm" onchange="updateRate(this)">
+                                <option value="Item 1">Item 1</option>
+                                <option value="Item 2">Item 2</option>
+                                <option value="Item 3">Item 3</option>
+                                <option value="Item 4">Item 4</option>
+                            </select>
+                        </td>
+                        <td><input type="number" name="qty" value="20" oninput="calculateAmount(this)"></td>
+                        <td><input type="number" name="rate" value="1300" oninput="calculateAmount(this)" readonly></td>
+                        <td><input type="number" name="amt" value="26000" readonly></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button type="button" id="addRowBtn" onclick="addRow()">Add Row</button>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+    </body>
 </html>
